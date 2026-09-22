@@ -1,0 +1,11 @@
+# geo3dcull — Python dependencies
+#
+# Core (required):
+numpy>=1.20
+scipy>=1.7
+
+# Optional: visualization
+matplotlib>=3.4
+
+# Optional: mesh decimation (used by Geometry.decimate / runTestLowPoly)
+point-cloud-utils>=0.9
