@@ -45,7 +45,7 @@ CUDA_LIB  := $(LIBS)/libGeo3DCullLibCuda.so
 CXXFLAGS  := -std=c++17 -fPIC -O2 -Wall -Wextra -fopenmp \
              -I$(CPU_INC) -I$(CPU_SRC) -D GEO3DCULLLIB_EXPORTS
 
-CUDA_ARCH ?= -gencode=arch=compute_70,code=sm_70 -gencode=arch=compute_80,code=sm_80
+CUDA_ARCH ?= -gencode=arch=compute_75,code=sm_75 -gencode=arch=compute_80,code=sm_80 -gencode=arch=compute_86,code=sm_86 -gencode=arch=compute_90,code=sm_90 -gencode=arch=compute_120,code=sm_120
 NVCCFLAGS := -std=c++17 -O3 -Xcompiler -fPIC \
              $(CUDA_ARCH) -I$(CUDA_INC) -I$(CUDA_SRC) \
              -DGEO3DCULLLIB_CUDA_EXPORTS
@@ -76,7 +76,7 @@ cuda:
 
 test: cpu
 	$(CXX) $(CXXFLAGS) $(TEST_SRC)/test_program.cpp \
-		-L$(LIBS) -lGeo3DCullLib -Wl,-rpath,'$$ORIGIN/..,$(CURDIR)/$(LIBS)' \
+		-L$(LIBS) -lGeo3DCullLib -Wl,-rpath,'$$ORIGIN/..' -Wl,-rpath,$(CURDIR)/$(LIBS) \
 		-o $(TEST_SRC)/test_program
 	@cp -f $(CPU_LIB) $(TEST_SRC)/ 2>/dev/null || true
 	@$(TEST_SRC)/test_program

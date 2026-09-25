@@ -79,8 +79,10 @@ if(GPU)
 
   set(CMAKE_CUDA_STANDARD 17)
   # Default to a broad architecture range; override with -DCMAKE_CUDA_ARCHITECTURES.
+  # NB: nvcc 12.8+ dropped sm_60/70 (Pascal/Volta) support; 75+ covers
+  # Turing through Blackwell, including GB10 (sm_121).
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES 70 80)
+    set(CMAKE_CUDA_ARCHITECTURES 75 80 86 90 120)
   endif()
 
   add_library(geo3dcull-cuda SHARED

@@ -1,5 +1,12 @@
 # geo3dcull
 
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC%20BY--NC%204.0-lightgrey.svg)](LICENSE)
+
+> ⚠️ **Work in progress.** Research-grade code, build- and correctness-verified
+> on CPU (OpenMP) and real CUDA GPU hardware, but not yet independently
+> reviewed or hardened for production. See
+> [Disclaimer & TODO](#disclaimer--work-in-progress).
+
 **GPU/CPU-accelerated 3D mesh visibility culling** — a self-contained toolkit that
 computes which faces and vertices of a triangular mesh are visible from a
 point-wise camera, with support for occlusion testing and boundary relaxation.
@@ -8,6 +15,11 @@ The core culling is implemented in C++ (OpenMP) with an optional CUDA (GPU)
 backend, exposed to Python through a clean `ctypes` wrapper that ships in this
 repository. Clone, build, and run — no external services or special environments
 required.
+
+![Visibility culling on a subdivided icosphere: gray = full mesh, yellow = visible faces, blue = visible vertices, black arrow = camera](docs/images/geo3dcull_visibility.png)
+
+*Figure generated directly from the library's own test/demo helper
+(`Geo3DCullDLL.runTest`) — see `docs/generate_figure.py`.*
 
 ```
 ┌────────────┐   ctypes    ┌─────────────────────────────┐
@@ -82,8 +94,8 @@ geo3dcull/
 ### 1. Clone
 
 ```bash
-git clone https://github.com/yourorg/geo3dcull.git
-cd geo3dcull
+git clone https://github.com/stefanomoriconi/Geo3DCull.git
+cd Geo3DCull
 ```
 
 ### 2. Build the shared library
@@ -274,4 +286,62 @@ python python/tests/test_wrapper.py
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+**CC BY-NC 4.0** — free for research, personal, and non-commercial use;
+commercial use requires a separate license from the author. See
+[LICENSE](LICENSE).
+
+---
+
+## Verification status
+
+This session verified, on real hardware (not just compile-checked):
+
+| Path | Status |
+|---|---|
+| CPU build (`make cpu` / CMake) | ✅ builds clean |
+| C++ test suite (`make test` → `test/test_program`) | ✅ all 3 test groups pass (single-triangle visibility, occlusion, backface culling) |
+| Python wrapper, CPU backend | ✅ `python/tests/test_wrapper.py` passes |
+| CUDA build (`make cuda`, NVIDIA GB10 / sm_121, CUDA 13) | ✅ builds after fixing arch flags (see below) |
+| Python wrapper, CUDA backend | ✅ passes, device detected (`NVIDIA GB10`) |
+
+Two real bugs were found and fixed during this verification pass:
+
+1. **`make test` linker failure**: the `Makefile`'s `test` target passed two
+   rpath directories as a single comma-joined `-Wl,-rpath,'A,B'` argument,
+   which GNU `ld` parses as one literal (invalid) path rather than two
+   search paths. Fixed by using two separate `-Wl,-rpath,` flags.
+2. **CUDA build failure on newer toolkits**: both the `Makefile`'s default
+   `CUDA_ARCH` and `CMakeLists.txt`'s default `CMAKE_CUDA_ARCHITECTURES`
+   targeted `sm_70` (Volta), which `nvcc` 12.8+ no longer supports. Updated
+   the defaults to `75;80;86;90;120` (Turing through Blackwell, including
+   GB10/sm_121) in both build systems.
+
+---
+
+## Disclaimer & Work-In-Progress
+
+This project is a **research-grade reference implementation**, not a
+production-hardened library. It has been correctness-tested by its author
+(C++ unit tests, Python smoke tests, real CPU + CUDA GPU hardware) but has
+**not** undergone independent third-party review, fuzzing, or large-scale
+production use. Use at your own risk; please open an issue if you find a bug.
+
+### To-do / known limitations
+
+- [ ] No automated CI (GitHub Actions) yet — builds/tests are currently
+      run manually; adding a CI workflow (mirroring the sibling
+      `TriDecimate` project) is planned.
+- [ ] No fuzz-testing of malformed/adversarial mesh input (non-manifold
+      meshes, NaN coordinates, degenerate triangles).
+- [ ] CUDA path verified on a single GPU architecture (NVIDIA GB10, sm_121)
+      locally; not yet cross-checked on Turing/Ampere/Ada hardware.
+- [ ] No large-mesh (>1M triangle) stress/perf benchmark yet.
+- [ ] `Geometry.decimate()` depends on the optional `point_cloud_utils`
+      package and hasn't been re-verified this pass.
+- [ ] No packaged releases (PyPI wheel, versioned GitHub Releases) yet —
+      build from source only.
+- [ ] Occlusion testing has only been checked on simple synthetic scenes
+      (single/paired triangles, icosphere self-visibility); not yet
+      validated against a complex multi-object occluder scene.
+
+Contributions and bug reports that help close these gaps are very welcome.

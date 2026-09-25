@@ -5,17 +5,17 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "geo3dcull"
 version = "1.0.0"
-description = "GPU/CPU-accelerated 3D mesh visibility culling toolkit"
+description = "Geo3DCull: GPU/CPU-accelerated 3D mesh visibility culling toolkit"
 readme = "README.md"
-license = {text = "MIT"}
+license = {text = "CC-BY-NC-4.0"}
 authors = [
-    {name = "OGSMORIC"},
+    {name = "Stefano Moriconi"},
 ]
-keywords = ["3d", "mesh", "culling", "visibility", "geometry", "cuda", "openmp"]
+keywords = ["3d", "mesh", "culling", "visibility", "geometry", "cuda", "openmp", "geo3dcull"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: MIT License",
+    "License :: Free for non-commercial use",
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
@@ -50,9 +50,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourorg/geo3dcull"
-Documentation = "https://github.com/yourorg/geo3dcull#readme"
-"Source Code" = "https://github.com/yourorg/geo3dcull"
+Homepage = "https://github.com/stefanomoriconi/Geo3DCull"
+Documentation = "https://github.com/stefanomoriconi/Geo3DCull#readme"
+"Source Code" = "https://github.com/stefanomoriconi/Geo3DCull"
 
 [tool.setuptools.packages.find]
 where = ["."]
