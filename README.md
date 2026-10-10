@@ -328,9 +328,6 @@ production use. Use at your own risk; please open an issue if you find a bug.
 
 ### To-do / known limitations
 
-- [ ] No automated CI (GitHub Actions) yet — builds/tests are currently
-      run manually; adding a CI workflow (mirroring the sibling
-      `TriDecimate` project) is planned.
 - [ ] No fuzz-testing of malformed/adversarial mesh input (non-manifold
       meshes, NaN coordinates, degenerate triangles).
 - [ ] CUDA path verified on a single GPU architecture (NVIDIA GB10, sm_121)

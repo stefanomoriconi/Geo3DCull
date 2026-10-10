@@ -1,0 +1,153 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CMAKE_BUILD_TYPE: Release
+
+jobs:
+  # ------------------------------------------------------------------
+  #  CPU (OpenMP) build + C++ and Python tests, one job per platform.
+  #  GitHub-hosted runners have no GPU, so the CUDA path is not exercised
+  #  here (see COMPILING.md to build/test it locally with a CUDA toolkit
+  #  and an NVIDIA GPU).
+  # ------------------------------------------------------------------
+  cpu-windows:
+    name: CPU build + tests (Windows / MSVC)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: python -m pip install --upgrade pip numpy scipy pytest
+
+      - name: Configure (MSVC, x64)
+        run: cmake -S . -B build -G "Visual Studio 17 2022" -A x64 -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --config Release --parallel
+
+      - name: Run C++ test
+        shell: pwsh
+        run: & "$PWD/libs/geo3dcull-test.exe"
+
+      - name: Install Python wrapper
+        run: python -m pip install ./python
+
+      - name: Run Python tests
+        shell: pwsh
+        env:
+          GEO3DCULL_LIB_PATH: ${{ github.workspace }}\libs
+        run: python python/tests/test_wrapper.py
+
+  cpu-linux:
+    name: CPU build + tests (Linux / GCC)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install toolchain + Python deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake
+          python -m pip install --upgrade pip numpy scipy pytest
+
+      - name: Configure (GCC)
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run C++ test
+        run: ./libs/geo3dcull-test
+
+      - name: Install Python wrapper
+        run: python -m pip install ./python
+
+      - name: Run Python tests
+        env:
+          GEO3DCULL_LIB_PATH: ${{ github.workspace }}/libs
+        run: python python/tests/test_wrapper.py
+
+  cpu-macos:
+    name: CPU build + tests (macOS / Apple clang)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python deps
+        run: python -m pip install --upgrade pip numpy scipy pytest
+
+      - name: Install libomp (OpenMP runtime for Apple clang)
+        run: brew install libomp
+
+      - name: Configure (Apple clang)
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel
+
+      - name: Run C++ test
+        run: ./libs/geo3dcull-test
+
+      - name: Install Python wrapper
+        run: python -m pip install ./python
+
+      - name: Run Python tests
+        env:
+          GEO3DCULL_LIB_PATH: ${{ github.workspace }}/libs
+        run: python python/tests/test_wrapper.py
+
+  # ------------------------------------------------------------------
+  #  CUDA: compile + link the GPU mirror only (no GPU on hosted runners).
+  #  Validates that the CUDA source compiles and links against cudart.
+  #  Add a GPU runner (self-hosted / cloud) to exercise the actual GPU path.
+  # ------------------------------------------------------------------
+  cuda-compile:
+    name: CUDA compile + link (Linux / nvcc)
+    runs-on: ubuntu-latest
+    container:
+      image: nvidia/cuda:12.4.1-devel-ubuntu22.04
+      options: --security-opt seccomp=unconfined
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build deps
+        run: |
+          apt-get update
+          apt-get install -y --no-install-recommends cmake build-essential libomp-dev
+
+      - name: Configure (GPU ON)
+        run: |
+          cmake -S . -B build -DCMAKE_BUILD_TYPE=Release \
+                -DGPU=ON \
+                -DCMAKE_CUDA_ARCHITECTURES="80"
+
+      - name: Build (compile + link CPU lib, GPU mirror, and C++ test)
+        run: cmake --build build --parallel
+
+      - name: C++ test (CPU path, no GPU present on this runner)
+        run: ./libs/geo3dcull-test
+
+      - name: Show nvcc version
+        run: nvcc --version

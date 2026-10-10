@@ -65,6 +65,10 @@ target_include_directories(geo3dcull-cpu PUBLIC
 )
 target_compile_definitions(geo3dcull-cpu PUBLIC GEO3DCULLLIB_EXPORTS)
 target_link_libraries(geo3dcull-cpu PRIVATE OpenMP::OpenMP_CXX)
+# Match the Makefile/MSVC output name (Geo3DCullLib.*) so the Python wrapper's
+# default search (_default_dll_name()) finds the library regardless of which
+# build method was used.
+set_target_properties(geo3dcull-cpu PROPERTIES OUTPUT_NAME "Geo3DCullLib")
 
 # ----------------------------------------------------------------------------
 #  GPU (CUDA) library -- optional
@@ -95,6 +99,10 @@ if(GPU)
   )
   target_compile_definitions(geo3dcull-cuda PUBLIC GEO3DCULLLIB_CUDA_EXPORTS)
   set_target_properties(geo3dcull-cuda PROPERTIES CUDA_SEPARABLE_COMPILATION OFF)
+  # Match the Makefile/MSVC output name (Geo3DCullLibCuda.*) so the Python
+  # wrapper's default search (_default_dll_name()) finds the library
+  # regardless of which build method was used.
+  set_target_properties(geo3dcull-cuda PROPERTIES OUTPUT_NAME "Geo3DCullLibCuda")
 endif()
 
 # ----------------------------------------------------------------------------
