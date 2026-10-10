@@ -52,7 +52,10 @@ endif()
 # ----------------------------------------------------------------------------
 #  CPU (OpenMP) library
 # ----------------------------------------------------------------------------
-find_package(OpenMP REQUIRED)
+# OpenMP is optional: Apple clang ships with no OpenMP runtime by default, so
+# treat it as a performance opt-in rather than a hard requirement, falling
+# back to a serial CPU path when it is not found (e.g. plain macOS/Xcode).
+find_package(OpenMP QUIET)
 
 add_library(geo3dcull-cpu SHARED
   src/cpp/Geo3DCullLib.cpp
@@ -64,7 +67,12 @@ target_include_directories(geo3dcull-cpu PUBLIC
   src/cpp
 )
 target_compile_definitions(geo3dcull-cpu PUBLIC GEO3DCULLLIB_EXPORTS)
-target_link_libraries(geo3dcull-cpu PRIVATE OpenMP::OpenMP_CXX)
+if(OpenMP_CXX_FOUND)
+  target_link_libraries(geo3dcull-cpu PRIVATE OpenMP::OpenMP_CXX)
+  message(STATUS "geo3dcull-cpu: OpenMP enabled (CPU parallelism)")
+else()
+  message(STATUS "geo3dcull-cpu: OpenMP NOT found - building serial CPU path")
+endif()
 # Match the Makefile/MSVC output name (Geo3DCullLib.*) so the Python wrapper's
 # default search (_default_dll_name()) finds the library regardless of which
 # build method was used.
