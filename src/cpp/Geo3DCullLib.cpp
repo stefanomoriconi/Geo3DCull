@@ -2,7 +2,6 @@
 #include "pch.h"
 #include "Geo3DCullLib.h"
 #include "Geo3DCullLibUtils.h"
-#include <omp.h>
 #include <stdio.h>
 #include <iostream>
 #include <time.h>
@@ -16,7 +15,11 @@ void testOpenMP()
         char strOut[30];
         // snprintf is standard C99 and portable across MSVC/GCC/Clang
         // (unlike the MSVC-specific sprintf_s).
+#if defined(_OPENMP)
         snprintf(strOut, sizeof(strOut), "Hello from thread: %d", omp_get_thread_num());
+#else
+        snprintf(strOut, sizeof(strOut), "Hello (no OpenMP)");
+#endif
         // Lock-free-enough for a diagnostic: guard the stream with omp critical
         // so interleaved thread output does not corrupt the line.
 #pragma omp critical(stdio_out)
