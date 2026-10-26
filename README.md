@@ -17,7 +17,7 @@ backend, exposed to Python through a clean `ctypes` wrapper that ships in this
 repository. Clone, build, and run — no external services or special environments
 required.
 
-![Visibility culling on a subdivided icosphere: gray = full mesh, yellow = visible faces, blue = visible vertices, black arrow = camera](docs/images/geo3dcull_visibility.png)
+![Visibility culling on a subdivided icosphere: gray = full mesh, yellow = visible faces, blue = visible vertices, black arrow = camera - supporting (self-)occlusions](docs/images/geo3dcull_FaceCulling.gif)
 
 *Figure generated directly from the library's own test/demo helper
 (`Geo3DCullDLL.runTest`) — see `docs/generate_figure.py`.*
